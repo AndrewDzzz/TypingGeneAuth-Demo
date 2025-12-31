@@ -377,6 +377,9 @@
       syntheticKeyEvents: 0,
       webdriverDetected: false,
       automationFlags: {},
+      // InputType detection (null/undefined = real keyboard input)
+      nullInputTypeCount: 0,
+      totalInputEvents: 0,
       trajectory: {
         captured: false,
         points: 0,
@@ -476,6 +479,22 @@
         stats.syntheticKeyEvents++;
       }
     });
+    
+    // ============================================================
+    // InputType Detection (Human Indicator)
+    // inputType = null/undefined indicates real keyboard input
+    // ============================================================
+    function trackInputType(e) {
+      stats.totalInputEvents++;
+      // Real keyboard input often has inputType as undefined or specific values
+      // Script injection via element.value += char doesn't trigger input event properly
+      if (e.inputType === undefined || e.inputType === null || e.inputType === "") {
+        stats.nullInputTypeCount++;
+      }
+    }
+    
+    usernameField.addEventListener("input", trackInputType);
+    passwordField.addEventListener("input", trackInputType);
     
     // ============================================================
     // WebDriver/Automation Detection
@@ -711,6 +730,8 @@
         syntheticKeyEvents: 0,
         webdriverDetected: false,
         automationFlags: {},
+        nullInputTypeCount: 0,
+        totalInputEvents: 0,
         trajectory: { captured: false, points: 0, distancePx: 0, sample: [] },
         typingdna: { lastUserTp: "", lastPassTp: "" }
       };
