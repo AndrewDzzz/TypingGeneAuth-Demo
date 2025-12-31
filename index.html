@@ -482,15 +482,18 @@
     
     // ============================================================
     // InputType Detection (Human Indicator)
-    // inputType = null/undefined indicates real keyboard input
+    // inputType detection - inputType=null 是人类特征
     // ============================================================
     function trackInputType(e) {
       stats.totalInputEvents++;
-      // Real keyboard input often has inputType as undefined or specific values
-      // Script injection via element.value += char doesn't trigger input event properly
-      if (e.inputType === undefined || e.inputType === null || e.inputType === "") {
+      // inputType === null 是真实人类输入的特征
+      // 自动化脚本通常会产生 "insertText" 等具体值
+      if (e.inputType === null || e.inputType === undefined) {
         stats.nullInputTypeCount++;
       }
+      
+      // 记录实际的 inputType 用于调试
+      console.log("[input]", JSON.stringify({ field: e.target.id, inputType: e.inputType }));
     }
     
     usernameField.addEventListener("input", trackInputType);
