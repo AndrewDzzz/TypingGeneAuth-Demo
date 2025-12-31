@@ -220,7 +220,7 @@ const AutomationDetector = {
 
   // ============================================================
   // 检测 InputType (Human Indicator)
-  // inputType = null/undefined 表示真实键盘输入
+  // inputType = null 是人类真实输入的特征
   // ============================================================
   detectInputType(stats) {
     const result = { humanFlags: [], botFlags: [] };
@@ -228,19 +228,19 @@ const AutomationDetector = {
     if (stats.totalInputEvents > 0) {
       const nullRatio = stats.nullInputTypeCount / stats.totalInputEvents;
       
-      // 如果有 null inputType 事件，说明是真实键盘输入
+      // inputType === null 是人类特征
       if (stats.nullInputTypeCount > 0) {
         result.humanFlags.push({
           weight: 2,
-          reason: `Real keyboard input detected (${stats.nullInputTypeCount}/${stats.totalInputEvents} events with null inputType)`
+          reason: `Human input detected (${stats.nullInputTypeCount}/${stats.totalInputEvents} events with inputType=null)`
         });
       }
       
-      // 如果完全没有 null inputType，可能是脚本注入
+      // 如果完全没有 null inputType，可能是自动化脚本
       if (stats.nullInputTypeCount === 0 && stats.totalInputEvents > 3) {
         result.botFlags.push({
           weight: 2,
-          reason: `No null inputType events detected (possible script injection)`
+          reason: `No null inputType events (possible automation - all events have specific inputType)`
         });
       }
     }
