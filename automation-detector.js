@@ -219,6 +219,36 @@ const AutomationDetector = {
   },
 
   // ============================================================
+  // 检测 InputType (Human Indicator)
+  // inputType = null/undefined 表示真实键盘输入
+  // ============================================================
+  detectInputType(stats) {
+    const result = { humanFlags: [], botFlags: [] };
+    
+    if (stats.totalInputEvents > 0) {
+      const nullRatio = stats.nullInputTypeCount / stats.totalInputEvents;
+      
+      // 如果有 null inputType 事件，说明是真实键盘输入
+      if (stats.nullInputTypeCount > 0) {
+        result.humanFlags.push({
+          weight: 2,
+          reason: `Real keyboard input detected (${stats.nullInputTypeCount}/${stats.totalInputEvents} events with null inputType)`
+        });
+      }
+      
+      // 如果完全没有 null inputType，可能是脚本注入
+      if (stats.nullInputTypeCount === 0 && stats.totalInputEvents > 3) {
+        result.botFlags.push({
+          weight: 2,
+          reason: `No null inputType events detected (possible script injection)`
+        });
+      }
+    }
+    
+    return result;
+  },
+
+  // ============================================================
   // 分析单字段打字特征
   // ============================================================
   analyzeFieldTyping(pattern) {
@@ -467,6 +497,17 @@ const AutomationDetector = {
     syntheticFlags.forEach(f => {
       botScore += f.weight;
       result.reasons.push(`[Events] ${f.reason}`);
+    });
+    
+    // ==================== 11. InputType 检测（人类指标）====================
+    const inputTypeResult = this.detectInputType(stats);
+    inputTypeResult.humanFlags.forEach(f => {
+      humanScore += f.weight;
+      result.details.inputType = stats.nullInputTypeCount;
+    });
+    inputTypeResult.botFlags.forEach(f => {
+      botScore += f.weight;
+      result.reasons.push(`[InputType] ${f.reason}`);
     });
     
     // ==================== 计算最终结果 ====================
